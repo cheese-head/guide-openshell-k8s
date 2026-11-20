@@ -32,3 +32,7 @@ flowchart LR
 | [Clean up](guides/openshell-on-kubernetes.md#6-clean-up) | The smoke sandbox is deleted, and you can see what Helm uninstall retains. |
 
 Tested with **OpenShell 0.1.9**, **Agent Sandbox 1.0.10**, and **K3s v1.34.3+k3s1**.
+
+## Next guide
+
+[Choose an LLM endpoint and model for Hermes Agent](guides/hermes-model-endpoint.md) shows how to attach a provider to one sandbox and configure the harness to request a specific model.
