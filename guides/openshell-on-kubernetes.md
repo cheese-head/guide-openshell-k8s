@@ -1,12 +1,19 @@
 # Run OpenShell on a vanilla Kubernetes cluster
 
+[← Repository overview](../README.md)
+
 Deploy OpenShell, connect the CLI over a local port-forward, and prove that a sandbox can run a command and write to its workspace. This single-operator walkthrough uses OpenShell **0.1.9** and Kubernetes Agent Sandbox **1.0.10**. You need no GPU, model account, ingress controller, or identity provider for the lab.
 
-Installing Agent Sandbox and then the upstream OpenShell Helm chart is NVIDIA's documented Kubernetes setup. For a workstation trial, the local installer starts a gateway without Kubernetes. For a shared Kubernetes deployment, use TLS ingress or an access proxy, with OIDC for individual user identities. Multiple gateway replicas require shared PostgreSQL. [Kubernetes setup](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/setup) · [Local installation](https://docs.nvidia.com/openshell/v0.1.9/about/installation/) · [Access control](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/access-control) · [Ingress](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/ingress)
+**On this page** · [Cluster](#1-check-the-cluster) · [Install](#2-install-agent-sandbox-and-openshell) · [Connect](#3-connect-over-loopback) · [Smoke test](#4-prove-a-sandbox-works) · [Troubleshoot](#5-find-failures-by-layer) · [Cleanup](#6-clean-up)
+
+> [!NOTE]
+> Installing Agent Sandbox and then the upstream OpenShell Helm chart is NVIDIA's documented Kubernetes setup. For a workstation trial, the local installer starts a gateway without Kubernetes. For a shared cluster, use TLS ingress or an access proxy, with OIDC for individual user identities. Multiple gateway replicas require shared PostgreSQL.
+>
+> [Kubernetes setup](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/setup) · [Local installation](https://docs.nvidia.com/openshell/v0.1.9/about/installation/) · [Access control](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/access-control) · [Ingress](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/ingress)
 
 ## 1. Check the cluster
 
-Use Kubernetes 1.29 or newer with RBAC, a network implementation that enforces ingress and egress `NetworkPolicy`, and a default StorageClass with dynamic provisioning for the chart's PVCs. The gateway's SQLite database uses WAL mode. Use a local disk-backed filesystem or a filesystem on a block-backed volume. K3s's default `local-path` class worked in this single-node lab. Avoid NFS and other network filesystems for the gateway database. [OpenShell Kubernetes prerequisites](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/setup#prerequisites) · [K3s storage](https://docs.k3s.io/add-ons/storage)
+Use Kubernetes 1.29 or newer with RBAC, a network implementation that enforces ingress and egress `NetworkPolicy`, and a default StorageClass with dynamic provisioning for the chart's PVCs. K3s's default `local-path` class worked in this single-node lab. [OpenShell Kubernetes prerequisites](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/setup#prerequisites) · [K3s storage](https://docs.k3s.io/add-ons/storage)
 
 The machine running the install needs access to GitHub release assets and the chart in `ghcr.io`. Cluster nodes need image pull access to `registry.k8s.io`, `ghcr.io`, and `nvcr.io`. The NetworkPolicy probe pods pull `busybox:1.37.0` from Docker Hub.
 
@@ -36,7 +43,10 @@ kubectl --context "$K8S_CONTEXT" get storageclass
 openshell --version
 ```
 
-Expect a Ready node, a default StorageClass, and `openshell 0.1.9`. Before deploying, verify ingress and egress enforcement in the sandbox namespace. Run the [network policy check](#network-policy-check) unless enforcement has already been verified there. Installing Agent Sandbox and the gateway chart's default RBAC requires cluster-scoped permissions. [Installing without cluster-admin](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/setup#installing-without-cluster-admin)
+Expect a Ready node, a default StorageClass, and `openshell 0.1.9`. Installing Agent Sandbox and the gateway chart's default RBAC requires cluster-scoped permissions. [Installing without cluster-admin](https://docs.nvidia.com/openshell/v0.1.9/kubernetes/setup#installing-without-cluster-admin)
+
+> [!IMPORTANT]
+> Before deploying, verify ingress and egress enforcement in the sandbox namespace. Run the [NetworkPolicy check](#network-policy-check) unless enforcement has already been verified there.
 
 ## 2. Install Agent Sandbox and OpenShell
 
@@ -62,7 +72,7 @@ kubectl --context "$K8S_CONTEXT" -n openshell rollout status \
 kubectl --context "$K8S_CONTEXT" -n openshell get pods,pvc
 ```
 
-Expect `openshell-0` to be Ready and `openshell-data-openshell-0` to be Bound. On a fresh cluster, the PKI hook and first image pulls can take a few minutes.
+**Check your result.** Pod `openshell-0` should be Ready and PVC `openshell-data-openshell-0` should be Bound. On a fresh cluster, the PKI hook and first image pulls can take a few minutes.
 
 ## 3. Connect over loopback
 
@@ -117,7 +127,7 @@ kubectl --context "$K8S_CONTEXT" -n openshell wait --for=condition=Ready \
   sandboxes.agents.x-k8s.io/default--smoke --timeout=60s
 ```
 
-The test passes when you see `openshell-smoke-ok` and the Sandbox Ready condition. The Kubernetes condition can briefly lag behind successful CLI execution. Delete the smoke sandbox before reusing its name.
+**Check your result.** The command prints `openshell-smoke-ok` and the Sandbox reaches `Ready`. Kubernetes can report the condition shortly after CLI execution succeeds. Delete the smoke sandbox before reusing its name.
 
 ## 5. Find failures by layer
 
