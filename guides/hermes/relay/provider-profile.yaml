@@ -1,0 +1,16 @@
+id: relay-otlp
+display_name: Relay OTLP traces
+category: data
+credentials: []
+binaries:
+  - /usr/bin/python3.13
+endpoints:
+  - host: otel-collector.openshell.svc.cluster.local
+    port: 4318
+    path: /v1/traces
+    protocol: rest
+    enforcement: enforce
+    rules:
+      - allow:
+          method: POST
+          path: /v1/traces

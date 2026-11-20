@@ -33,6 +33,7 @@ flowchart LR
 
 Tested with **OpenShell 0.1.9**, **Agent Sandbox 1.0.10**, and **K3s v1.34.3+k3s1**.
 
-## Next guide
+## Follow-on guides
 
-[Choose an LLM endpoint and model for Hermes Agent](guides/hermes-model-endpoint.md) shows how to attach a provider to one sandbox and configure the harness to request a specific model.
+- [Choose an LLM endpoint and model for Hermes Agent](guides/hermes-model-endpoint.md). Attach a provider to one sandbox and configure the harness to request a specific model.
+- [Forward Hermes traces with NeMo Relay](guides/hermes-relay-tracing.md). Send agent traces over OTLP to an OpenTelemetry Collector on Kubernetes.
